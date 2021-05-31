@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LVGL + DISCO-H747I in mbed studio</title>
+<style>
+  h1,h2,h3 { color: blue; }
+  body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; }
+  table { border-width: 3px; border-style: solid; border-color: #819FF7; vertical-align: middle; }
+  th { background-color: #819FF7; border-width: 1px; border-style: solid; border-color: #819FF7; }
+  td { border-width: 1px; border-style: solid; border-color: #819FF7; }
+  img { padding: 5px; margin-left: auto; margin-right: auto; }
+</style>
+</head>
+<body>
+    <h1>LVGL and DISCO-H747I in mbed studio</h1>
+	<h3>12th May, 2021</h3>
+    <p>The goal for this project is to use the LVGL library in mbed studio. Firstly study the blog: <a href="https://os.mbed.com/users/JohnnyK/notebook/how-start-with-the-LVGL/">How start with the LVGL on the Disco F746NG with Mbed</a>.</p>
+	<p>
+	<p>Setup a New Program as described in the above blog.</p>
+	<p>
+	<p>Add the libraries as shown in the photo:</p> 
+	<img alt="Import libraries into the project:" src="http://www.rescuerobot.org/drupal/sites/default/files/LVGL_Demo2.jpg" style="width: 707px; height: 508px; " />
+    <p><a href="https://os.mbed.com/docs/mbed-studio/current/manage-libraries/index.html#importing-a-library">mbed documentation: Importing a library</a>.</p>
+    <p><a href="https://os.mbed.com/teams/ST/code/BSP_DISCO_H747I/">BSP_DISCO_H747I</a>.</p>
+    <p><a href="https://github.com/lvgl/lvgl">lvgl v7.11.0</a>.</p>
+    <p><a href="https://github.com/lvgl/lv_drivers">lv_drivers v7.11.0</a>.</p>
+    <p><a href="https://github.com/lvgl/lv_examples">lv_examples v7.11.0</a>.</p>
+    <p>mbed-os 6.7.0 Shared.</p>
+
+    <p>Setup the lvgl library: here are the modifications to my two files: </p>
+    <pre><code>
+    <textarea cols="80" name="lv_conf.h" rows="15">
+/**
+ * @file lv_conf.h
+ * Configuration file for v7.6.0-dev
+ */
+
+/*
+ * COPY THIS FILE AS `lv_conf.h` NEXT TO the `lvgl` FOLDER
+ */
+
+#if 1 /*Set it to "1" to enable content kg1*/
+
+#ifndef LV_CONF_H
+#define LV_CONF_H
+/* clang-format off */
+
+#include <stdint.h>   //kg1
+
+/*====================
+   Graphical settings
+ *====================*/
+
+/* Maximal horizontal and vertical resolution to support by the library.*/
+#define LV_HOR_RES_MAX          (800)
+#define LV_VER_RES_MAX          (480)
+
+/* Color depth:
+ * - 1:  1 byte per pixel
+ * - 8:  RGB332
+ * - 16: RGB565
+ * - 32: ARGB8888
+ */
+#define LV_COLOR_DEPTH     32  //kg1
+...
+    </textarea>
+    </code></pre>
+	<p> 
+    <pre><code>
+    <textarea cols="80" name="lv_ex_conf.h" rows="15">
+/**
+ * @file lv_ex_conf.h
+ * Configuration file for v7.5.0
+ *
+ */
+/*
+ * COPY THIS FILE AS lv_ex_conf.h
+ */
+
+#if 1 /*Set it to "1" to enable the content kg1*/
+
+#ifndef LV_EX_CONF_H
+#define LV_EX_CONF_H
+
+
+/*******************
+ * GENERAL SETTING
+ *******************/
+#define LV_EX_PRINTF       0       /*Enable printf-ing data in demoes and examples*/
+#define LV_EX_KEYBOARD     0       /*Add PC keyboard support to some examples (`lv_drivers` repository is required)*/
+#define LV_EX_MOUSEWHEEL   0       /*Add 'encoder' (mouse wheel) support to some examples (`lv_drivers` repository is required)*/
+
+/*********************
+ * DEMO USAGE
+ *********************/
+
+/*Show some widget*/
+#define LV_USE_DEMO_WIDGETS        1  //kg1
+#if LV_USE_DEMO_WIDGETS
+#define LV_DEMO_WIDGETS_SLIDESHOW  0
+#endif
+...
+    </textarea>
+    </code></pre>
+	<p> 
+    <p>main.cpp setting:</p>
+    <pre><code>
+    <textarea cols="80" name="main.cpp" rows="15">
+#include "mbed.h"
+#include "lvgl/lvgl.h"
+#include "BSP_DISCO_H747I/STM32H747I-Discovery/stm32h747i_discovery.h"
+#include "BSP_DISCO_H747I/STM32H747I-Discovery/stm32h747i_discovery_lcd.h"
+#include "BSP_DISCO_H747I/STM32H747I-Discovery/stm32h747i_discovery_ts.h"
+#include "lv_examples/lv_examples.h"
+
+#define LVGL_TICK 5                             //Time tick value for lvgl in ms (1-10msa)
+#define TICKER_TIME 5ms //0.001 * LVGL_TICK           //modified to miliseconds
+ 
+Ticker ticker;                                  //Initialize your system tick                    
+TS_StateTypeDef TS_State;  
+ 
+void lv_ticker_func();
+void display_init(void);
+void touchpad_init(void);
+static void my_disp_flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p);
+static bool touchpad_read(lv_indev_drv_t *indev, lv_indev_data_t *data);
+ 
+int main()
+{
+    printf("LittlevGL DEMO");
+    display_init();
+    touchpad_init();
+    ticker.attach(callback(&lv_ticker_func),TICKER_TIME);
+ 
+     lv_demo_widgets();
+ 
+    while(1);
+}
+ 
+void lv_ticker_func(){
+    lv_tick_inc(LVGL_TICK); 
+    //Call lv_tick_inc(x) every x milliseconds in a Timer or Task (x should be between 1 and 10). 
+    //It is required for the internal timing of LittlevGL.
+    lv_task_handler(); 
+    //Call lv_task_handler() periodically every few milliseconds. 
+    //It will redraw the screen if required, handle input devices etc.
+}
+ 
+void display_init(void){
+    //Init the touch screen display via the BSP driver. Based on ST's example.
+    BSP_LCD_Init();
+    BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+    BSP_LCD_DisplayOn();
+    BSP_LCD_SelectLayer(0);
+    BSP_LCD_Clear(LCD_COLOR_TRANSPARENT );
+    BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+    BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+    
+    lv_init();                                  //Initialize the LittlevGL
+    static lv_disp_buf_t disp_buf;
+    static lv_color_t buf[LV_HOR_RES_MAX * 10]; //Declare a buffer for 10 lines                                                              
+    lv_disp_buf_init(&disp_buf, buf, NULL, LV_HOR_RES_MAX * 10); //Initialize the display buffer
+    
+    //Implement and register a function which can copy a pixel array to an area of your display
+    lv_disp_drv_t disp_drv;                     //Descriptor of a display driver
+    lv_disp_drv_init(&disp_drv);                //Basic initialization
+    disp_drv.flush_cb = my_disp_flush_cb;       //Set your driver function
+    disp_drv.buffer = &disp_buf;                //Assign the buffer to the display
+    lv_disp_drv_register(&disp_drv);            //Finally register the driver
+}
+ 
+void my_disp_flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p)
+{
+    //The most simple case (but also the slowest) to put all pixels to the screen one-by-one
+    uint16_t x, y;
+    for(y = area->y1; y <= area->y2; y++) {
+        for(x = area->x1; x <= area->x2; x++) {
+            //put_px(x, y, *color_p)
+            BSP_LCD_DrawPixel( x, y, color_p->full);
+            color_p++;
+        }
+    }
+    //IMPORTANT!!!* Inform the graphics library that you are ready with the flushing
+    lv_disp_flush_ready(disp_drv);
+}
+ 
+ 
+void touchpad_init(void){
+    BSP_TS_Init(480, 272);
+    lv_indev_drv_t indev_drv;                       //Descriptor of an input device driver
+    lv_indev_drv_init(&indev_drv);                  //Basic initialization
+    indev_drv.type = LV_INDEV_TYPE_POINTER;         //The touchpad is pointer type device
+    indev_drv.read_cb = touchpad_read;              //Set the touchpad_read function
+    lv_indev_drv_register(&indev_drv);              //Register touch driver in LvGL
+}
+ 
+static bool touchpad_read(lv_indev_drv_t *indev, lv_indev_data_t *data){
+    // Read your touchpad
+    BSP_TS_GetState(&TS_State);
+    if(TS_State.touchDetected) {
+        data->point.x = TS_State.touchX[0];
+        data->point.y = TS_State.touchY[0];
+        data->state = LV_INDEV_STATE_PR;
+    } else {
+        data->point.x = 0;
+        data->point.y = 0;
+        data->state = LV_INDEV_STATE_REL;
+    }
+    return false;   //false: no more data to read because we are no buffering
+}
+    </textarea>
+    </code></pre>
+	<p> 
+    <p>Copy and paste the above code into main.cpp in mbed studio.</p>
+	<p>
+	<p>You are now ready to compile your demo code:</p>
+	<p>
+	<img alt="mbed studio with code compiled" src="http://www.rescuerobot.org/drupal/sites/default/files/LVGL_Demo3.jpg" style="width: 707px; height: 508px; " />
+    </p>
+	<p> 
+	<img alt="Display Example 1" src="http://www.rescuerobot.org/drupal/sites/default/files/LVGL_display1s.jpg" style="width: 504px; height: 378px; " />
+    </p>
+	<p> 
+	<img alt="Display Example 2" src="http://www.rescuerobot.org/drupal/sites/default/files/LVGL_display2s.jpg" style="width: 504px; height: 378px; " />
+    </p>
+	<p>I hope this works for you!</p>
+</body>
+</html>

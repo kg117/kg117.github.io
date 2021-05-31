@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Arduino MKR WAN 1300 and MKR ENV with Parallax 28084</title>
+<style>
+  h1,h2,h3 { color: blue; }
+  body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; }
+  table { border-width: 3px; border-style: solid; border-color: #819FF7; vertical-align: middle; }
+  th { background-color: #819FF7; border-width: 1px; border-style: solid; border-color: #819FF7; }
+  td { border-width: 1px; border-style: solid; border-color: #819FF7; }
+  img { padding: 5px; margin-left: auto; margin-right: auto; }
+</style>
+</head>
+<body>
+    <h1>Arduino MKR WAN 1300 and MKR ENV and Waveshare 2.9inch e-Paper Module</h1>
+	<h3>8th April, 2021</h3>
+    <p>My purchases were made from: </p>
+	<p><a href="https://store.arduino.cc/usa/mkr-wan-1300">Arduino MKR WAN 1300 (LoRa connectivity) Code: ABX00017</a>. <a href="https://content.arduino.cc/assets/MKRWANV1.0_sch.pdf">Schematic.</a>.</p>
+	<p><a href="https://store.arduino.cc/usa/mkr-env-shield">Arduino Arduino MKR ENV Shield Code: ASX00011</a>. <a href="https://content.arduino.cc/assets/MKRENVShieldV4.0_sch.pdf">Schematic.</a>.</p>
+	<p><a href="https://www.parallax.com/product/296-x-128-2-9-inch-epaper-display/">Parallax 296 x 128 2.9 inch ePaper Display SKU 28084</a>. <a href="https://www.waveshare.com/wiki/2.9inch_e-Paper_Module">Manufacturers Info.</a>. </p>
+	<p> 
+	<img alt="Hardware" src="http://www.rescuerobot.org/drupal/sites/default/files/Arduino/MKR-WAN-1300-to-28084-and-MKR-ENVs.jpg" style="width: 452px; height: 508px; " />
+    </p>
+    <p>The wiring was completed as in the following diagram:</p>
+	<p> 
+	<img alt="Wiring" src="http://www.rescuerobot.org/drupal/sites/default/files/Arduino/MKR-WAN-1300-wiring-to-28084-and-MKR-ENV.jpg" style="width: 1050px; height: 600px; " />
+    </p>
+	<p>The MKR ENV shield plugs in on top of the MKR WAN 1300. Hence it is important to understand which pins are available for connecting the e-Paper Module to the MKR WAN 1300.</p>
+    <h1>Writing the code for the MKR WAN 1300</h1>
+    <p>The first step is to read the article: <a href="https://www.arduino.cc/en/Guide/MKRENVShield">Getting Started with the MKR ENV Shield</a> then reviewing the opportunities in: <a href="https://www.element14.com/community/roadTestReviews/3427/l/arduino-mkr-wan-1300-env-sensor-shield-review">Arduino MKR WAN 1300 + ENV Sensor Shield - Review</a>. </p>
+	<p>Next install the library for the MKR ENV shield. This will also install the example for the MKR ENV sheild. Run the example and review the output in the Serial Monitor.</p> 
+    <p>Next goto: <a href="https://github.com/ZinggJM/GxEPD">ZinggJM/GxEPD</a> look through the README, gain an understanding of GDEH029A1 2.9" b/w and study the example: <a href="https://github.com/ZinggJM/GxEPD/tree/master/examples/GxEPD_Example">GxEPD_Example.ino</a>. </p>
+	<p>The code below is a combination of the MKR ENV example and the GxEPD_Example.</p>
+    <pre><code>
+    <textarea cols="80" name="Setup" rows="15">
+//https://www.arduino.cc/en/Guide/MKRENVShield
+/*
+
+  MKR ENV Shield - Read Sensors
+
+  This example reads the sensors on-board the MKR ENV shield
+
+  and prints them to the Serial Monitor once a second.
+
+  The circuit:
+
+  - Arduino MKR board
+
+  - Arduino MKR ENV Shield attached
+
+  This example code is in the public domain.
+
+*/
+
+#include <Arduino_MKRENV.h>
+#include <GxEPD.h>
+#include <GxGDEH029A1/GxGDEH029A1.h>      // 2.9" b/w
+//#include GxEPD_BitmapExamples
+
+// FreeFonts from Adafruit_GFX
+//#include <Fonts/FreeMonoBold9pt7b.h>
+//#include <Fonts/FreeMonoBold12pt7b.h>
+//#include <Fonts/FreeMonoBold18pt7b.h>
+//#include <Fonts/FreeMonoBold24pt7b.h>
+//#include <Fonts/FreeSansBold18pt7b.h>
+//#include <Fonts/FreeSansBold24pt7b.h>
+#include <Fonts/FreeSansBold9pt7b.h>
+
+#include <GxIO/GxIO_SPI/GxIO_SPI.h>
+#include <GxIO/GxIO.h>
+GxIO_Class io(SPI, /*CS=*/ 0, /*DC=*/ 2, /*RST=*/ 3); // SPI, /*CS=*/ 4, /*DC=*/ 7, /*RST=*/ 6
+GxEPD_Class display(io, /*RST=*/ 3, /*BUSY=*/ 1); // io, /*RST=*/ 6, /*BUSY=*/ 5
+
+void setup() {
+
+  Serial.begin(115200);
+  //while (!Serial);
+  Serial.println("Serial Setup");
+  if (!ENV.begin()) {
+    Serial.println("Failed to initialize MKR ENV shield!");
+  }
+  pinMode(0, OUTPUT);
+  pinMode(4, OUTPUT);
+  //display.init(115200); // enable diagnostic output on Serial
+  display.init();
+  Serial.println("Display setup done");
+  delay(3000);
+}
+
+void loop() {
+
+  digitalWrite(0, HIGH);
+  digitalWrite(4, LOW);
+  // read all the sensor values
+
+  float temperature = ENV.readTemperature();
+
+  float humidity    = ENV.readHumidity();
+
+  float pressure    = ENV.readPressure();
+
+  float illuminance = ENV.readIlluminance();
+
+  float uva         = ENV.readUVA();
+
+  float uvb         = ENV.readUVB();
+
+  float uvIndex     = ENV.readUVIndex();
+
+  // print each of the sensor values
+  digitalWrite(0, LOW);
+  digitalWrite(4, HIGH);
+
+  delay(3000);
+  display.fillScreen(GxEPD_WHITE);
+  display.setTextColor(GxEPD_BLACK);
+  display.setFont(&FreeSansBold9pt7b);
+  //display.setTextSize(2);
+  display.setCursor(0, 0);
+  display.println();
+  Serial.print("Temperature = ");
+  Serial.print(temperature);
+  Serial.println(" degrees C");
+  delay(1000);
+  display.println("Temperature = ");
+  display.print(temperature, 1);
+  display.println(" degrees C");
+
+  Serial.print("Humidity    = ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  delay(1000);
+  display.println("Humidity = ");
+  display.print(humidity, 1);
+  display.println(" %");
+
+
+  Serial.print("Pressure    = ");
+  Serial.print(pressure);
+  Serial.println(" kPa");
+  delay(1000);
+  display.println("Pressure = ");
+  display.print(pressure, 1);
+  display.println(" kPa");
+
+  Serial.print("Illuminance = ");
+  Serial.print(illuminance);
+  Serial.println(" lx");
+  delay(1000);
+  display.println("Illuminance = ");
+  display.print(illuminance, 1);
+  display.println(" 1x");
+
+  Serial.print("UVA         = ");
+  Serial.println(uva);
+  Serial.print("UVB         = ");
+  Serial.println(uvb);
+
+  Serial.print("UV Index    = ");
+  Serial.println(uvIndex);
+  // print an empty line
+
+  Serial.println();
+
+  display.update();
+  delay(5000);
+  display.eraseDisplay();
+  // wait 1 second to print again
+
+  delay(1000);
+}
+	</textarea>
+    </code></pre>
+    <p>I hope you enjoy this project.</p>
+    <p> </p>
+</body>
+</html>
