@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lauterbach TRACE32 GDB Front-End Debugger for Portenta H7</title>
+<style>
+  h1,h2,h3 { color: blue; }
+  body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; }
+  table { border-width: 3px; border-style: solid; border-color: #819FF7; vertical-align: middle; }
+  th { background-color: #819FF7; border-width: 1px; border-style: solid; border-color: #819FF7; }
+  td { border-width: 1px; border-style: solid; border-color: #819FF7; }
+  img { padding: 5px; margin-left: auto; margin-right: auto; }
+</style>
+</head>
+<body>
+    <h1>Lauterbach TRACE32 GDB Front-End Debugger for Portenta H7</h1>
+	<h3>4th June, 2021</h3>
+    <p>The goal for this project is to debug code written for the Portenta H7. Firstly study the tutorial: <a href="https://www.arduino.cc/pro/tutorials/portenta-h7/por-ard-trace32/">Lauterbach TRACE32 GDB Front-End Debugger for Portenta H7</a>.</p>
+	<p>Check carefully that you have the most current versions of everything:</p>
+	<img alt="Correct versions of Arduino Classic, Arduino Core and bootloader." src="http://www.rescuerobot.org/drupal/sites/default/files/3-checking-versions.jpg" style="width: 1272px; height: 913px; " />
+	<p>
+	<p>Work through the steps outlined in the tutorial. If you are unable to see the Serial Number of your Portenta Board in the Board Info dialog try the same steps in the Classic Arduino IDE.</p>
+	<p>
+	<img alt="Serial Number accepted." src="http://www.rescuerobot.org/drupal/sites/default/files/3-licence-accepted.jpg" style="width: 1415px; height: 409px; " />
+	<p>
+	<p>Ignore the Wslcome dialog when you start-up TRACE32:</p>
+	<img alt="Welcome dialog of TRACE32." src="http://www.rescuerobot.org/drupal/sites/default/files/3-welcome-startup-dialog.jpg" style="width: 596px; height: 351px; " />
+	<p>
+    <p>When running the first demo under "ELF File Selection" access to the source code for the Arduino Core for your platform and the mbed-os are not available: </p>
+	<img alt="Debugger stops at line 24." src="http://www.rescuerobot.org/drupal/sites/default/files/3-debug-source-code-found.jpg" style="width: 1594px; height: 808px; " />
+	<p>
+	<p>Source Code missing for Libraries: </p> 
+	<img alt="Empty lines as library source code missing." src="http://www.rescuerobot.org/drupal/sites/default/files/3-debug-source-code-not-found.jpg" style="width: 1591px; height: 809px; " />
+	<p>
+	<p>If you wish to step through the Arduino Core source code for your platform compile and update T32ThreadDebug.ino: You must keep the IDE open and open TRACE32 : </p> 
+	<img alt="TEMP folder while your Arduino IDE is kept open." src="http://www.rescuerobot.org/drupal/sites/default/files/3-TEMP-project-directory.jpg" style="width: 533px; height: 439px; " />
+	<p>
+	<p>A third method of avoiding the Arduino IDE automatic clear out of files is to use Arduino-CLI: </p>
+    <pre><code>
+    <textarea cols="80" name="lv_conf.h" rows="15">
+arduino-cli compile -b arduino:mbed_portenta:envie_m7 --build-path D:\Arduino\generated_examples\portenta_blink\build --optimize-for-debug \Arduino\generated_examples\portenta_blink\portenta_blink.ino
+
+D:\Arduino-cli>arduino-cli compile -b arduino:mbed_portenta:envie_m7 --build-path D:\Arduino\generated_examples\portenta_blink\build --optimize-for-debug \Arduino\generated_examples\portenta_blink\portenta_blink.ino
+Couldn't deeply cache core build: Rel: can't make D:\Arduino\generated_examples\portenta_blink\build relative to C:\Users\kevin\AppData\Local\Temp\arduino-core-cache
+Running normal build of the core...
+Sketch uses 130736 bytes (16%) of program storage space. Maximum is 786432 bytes.
+Global variables use 62040 bytes (11%) of dynamic memory, leaving 461584 bytes for local variables. Maximum is 523624 bytes.
+=======================================================================================
+arduino-cli upload -b arduino:mbed_portenta:envie_m7 --port COM3 --input-dir D:\Arduino\generated_examples\portenta_blink \Arduino\generated_examples\portenta_blink\portenta_blink.ino 
+
+D:\Arduino-cli>arduino-cli upload -b arduino:mbed_portenta:envie_m7 --port COM3 --input-dir D:\Arduino\generated_examples\portenta_blink \Arduino\generated_examples\portenta_blink\portenta_blink.ino
+dfu-util 0.10-dev
+
+Copyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.
+Copyright 2010-2021 Tormod Volden and Stefan Schmidt
+This program is Free Software and has ABSOLUTELY NO WARRANTY
+Please report bugs to http://sourceforge.net/p/dfu-util/tickets/
+
+Warning: Invalid DFU suffix signature
+A valid DFU suffix will be required in a future dfu-util release
+Opening DFU capable USB device...
+Device ID 2341:035b
+Device DFU version 011a
+Claiming USB DFU Interface...
+Setting Alternate Interface #0 ...
+Determining device status...
+DFU state(2) = dfuIDLE, status(0) = No error condition is present
+DFU mode device DFU version 011a
+Device returned transfer size 4096
+DfuSe interface name: "Internal Flash   "
+Downloading element to address = 0x08040000, size = 132808
+Erase           [=========================] 100%       132808 bytes
+Erase    done.
+Download        [=========================] 100%       132808 bytes
+Download done.
+File downloaded successfully
+Transitioning to dfuMANIFEST state
+=====================================================================================
+arduino-cli debug -b arduino:mbed_portenta:envie_m7 --port COM3 --input-dir D:\Arduino\generated_examples\portenta_blink \Arduino\generated_examples\portenta_blink\portenta_blink.ino
+
+D:\Arduino-cli>arduino-cli debug -b arduino:mbed_portenta:envie_m7 --port COM3 --input-dir D:\Arduino\generated_examples\portenta_blink\build \Arduino\generated_examples\portenta_blink\portenta_blink.ino
+Error during Debug: Cannot get command line for tool: rpc error: code = Unimplemented desc = debugging not supported for board arduino:mbed_portenta:envie_m7
+=======================================================================================
+    </code></pre>
+	<p>
+	<p>Some more tips: </p> 
+	<img alt="Empty lines as library source code missing." src="http://www.rescuerobot.org/drupal/sites/default/files/3-GO-loop command.jpg" style="width: 838px; height: 991px; " />
+	<p>
+</body>
+</html>
