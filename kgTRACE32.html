@@ -39,7 +39,7 @@
     <p>
     <img alt="TEMP folder while your Arduino IDE is kept open." src="3-TEMP-project-directory.jpg" style="width: 533px; height: 439px; " />
     <p>
-    <p>A third method of avoiding the Arduino IDE automatic clear out of files is to use Arduino-CLI: </p>
+    <p>Another method of avoiding the Arduino IDE automatic clear out of files is to use Arduino-CLI commands for compile and update: </p>
     <pre><code>
     <textarea cols="80" name="lv_conf.h" rows="15">
 arduino-cli compile -b arduino:mbed_portenta:envie_m7 --build-path D:\Arduino\generated_examples\portenta_blink\build --optimize-for-debug \Arduino\generated_examples\portenta_blink\portenta_blink.ino
@@ -88,6 +88,7 @@ Error during Debug: Cannot get command line for tool: rpc error: code = Unimplem
     </textarea>
     </code></pre>
     <p>
+    <p>If you try the Arduino-CLI command for debug you will see an error message "debugging not supported for board arduino:mbed_portenta:envie_m7". However you are now ready to use TRACE32 with the file portenta_blink.ino.elf </p>
     <p>Some more tips: </p>
     <p>
     <img alt="Empty lines as library source code missing." src="3-GO-loop command.jpg" style="width: 838px; height: 991px; " />
